@@ -1,0 +1,10 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: liubai-code
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
