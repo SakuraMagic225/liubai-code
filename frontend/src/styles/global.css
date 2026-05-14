@@ -59,6 +59,106 @@ a {
   color: var(--coral-800);
 }
 
+.article-markdown {
+  color: var(--green-800);
+  font-size: 16px;
+  line-height: 1.9;
+}
+
+.article-markdown h2 {
+  margin-top: 2.5rem;
+  margin-bottom: 1rem;
+  scroll-margin-top: 6rem;
+  color: var(--green-800);
+  font-size: 1.65rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.article-markdown h3 {
+  margin-top: 2rem;
+  margin-bottom: 0.75rem;
+  scroll-margin-top: 6rem;
+  color: var(--green-800);
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.article-markdown p,
+.article-markdown ul,
+.article-markdown ol,
+.article-markdown table,
+.article-markdown pre {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+
+.article-markdown a {
+  color: var(--coral-400);
+  font-weight: 600;
+}
+
+.article-markdown ul,
+.article-markdown ol {
+  padding-left: 1.5rem;
+}
+
+.article-markdown ul {
+  list-style: disc;
+}
+
+.article-markdown ol {
+  list-style: decimal;
+}
+
+.article-markdown code:not(pre code) {
+  border-radius: 6px;
+  background: var(--green-50);
+  padding: 0.1rem 0.35rem;
+  color: var(--coral-600);
+  font-family: JetBrains Mono, Fira Code, Consolas, monospace;
+  font-size: 0.9em;
+}
+
+.article-markdown pre {
+  overflow-x: auto;
+  border: 1px solid rgba(192, 221, 151, 0.55);
+  border-radius: 8px;
+  background: #f8fbf4;
+  padding: 1rem;
+}
+
+.article-markdown pre code {
+  font-family: JetBrains Mono, Fira Code, Consolas, monospace;
+  font-size: 0.92rem;
+}
+
+.article-markdown table {
+  width: 100%;
+  border-collapse: collapse;
+  overflow: hidden;
+  border-radius: 8px;
+}
+
+.article-markdown th,
+.article-markdown td {
+  border: 1px solid rgba(192, 221, 151, 0.7);
+  padding: 0.75rem;
+  text-align: left;
+}
+
+.article-markdown th {
+  background: var(--green-50);
+}
+
+.article-markdown blockquote {
+  margin: 1.25rem 0;
+  border-left: 3px solid var(--coral-400);
+  background: var(--coral-50);
+  padding: 0.75rem 1rem;
+  color: var(--green-600);
+}
+
 .glass-card {
   border: 0.5px solid rgba(192, 221, 151, 0.3);
   background: rgba(255, 255, 255, 0.65);
