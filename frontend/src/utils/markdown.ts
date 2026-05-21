@@ -1,30 +1,38 @@
 import type { IArticleHeading } from '../types';
 
-export function slugifyHeading(text: string) {
-  return text
+export function slugifyHeading(text: string, index = 0) {
+  const slug = text
     .trim()
     .toLowerCase()
-    .replace(/[`~!@#$%^&*()+=\\[\]{}|;:'",.<>/?]/g, '')
-    .replace(/\s+/g, '-');
+    .replace(/[^\p{L}\p{N}]+/gu, '-')
+    .replace(/^-+|-+$/g, '');
+
+  return slug || `heading-${index + 1}`;
 }
 
-export function extractHeadings(content: string): IArticleHeading[] {
-  return content
-    .split('\n')
-    .map((line) => {
-      const match = /^(#{2,3})\s+(.+)$/.exec(line.trim());
+export function extractMarkdownHeadings(content: string): IArticleHeading[] {
+  const headings: IArticleHeading[] = [];
+  const lines = content.split('\n');
 
-      if (!match) {
-        return null;
-      }
+  lines.forEach((line) => {
+    const match = /^(##|###)\s+(.+)$/.exec(line.trim());
+    if (!match) {
+      return;
+    }
 
-      const text = match[2].replace(/`/g, '').trim();
+    const text = match[2].replace(/[#*_`[\]()]/g, '').trim();
+    if (!text) {
+      return;
+    }
 
-      return {
-        id: slugifyHeading(text),
-        text,
-        level: match[1].length as 2 | 3,
-      };
-    })
-    .filter((heading): heading is IArticleHeading => Boolean(heading));
+    headings.push({
+      id: slugifyHeading(text, headings.length),
+      text,
+      level: match[1].length as 2 | 3,
+    });
+  });
+
+  return headings;
 }
+
+export const extractHeadings = extractMarkdownHeadings;

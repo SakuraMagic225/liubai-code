@@ -1,4 +1,12 @@
-import type { IArticleDetail, IArticlePage, IArticleQuery, IArticleSummary, ITag } from '../types';
+import type {
+  IArchiveStats,
+  IArchiveYearGroup,
+  IArticleDetail,
+  IArticlePage,
+  IArticleQuery,
+  IArticleSummary,
+  ITag,
+} from '../types';
 import { extractHeadings } from '../utils/markdown';
 
 type ArticleSeed = Omit<IArticleDetail, 'headings' | 'previousArticle' | 'nextArticle'>;
@@ -347,6 +355,47 @@ export function getArticleById(id: number): IArticleDetail | undefined {
       ? articleSummaries.find((summary) => summary.id === previousArticle.id)
       : undefined,
     nextArticle: nextArticle ? articleSummaries.find((summary) => summary.id === nextArticle.id) : undefined,
+  };
+}
+
+export function getArchiveGroups(): IArchiveYearGroup[] {
+  const groups = articleSummaries.reduce<Map<number, Map<number, IArticleSummary[]>>>((acc, article) => {
+    const date = new Date(article.publishedAt);
+    const year = date.getFullYear();
+    const month = date.getMonth() + 1;
+
+    if (!acc.has(year)) {
+      acc.set(year, new Map<number, IArticleSummary[]>());
+    }
+
+    const yearGroup = acc.get(year);
+    const monthArticles = yearGroup?.get(month) ?? [];
+    monthArticles.push(article);
+    yearGroup?.set(month, monthArticles);
+
+    return acc;
+  }, new Map());
+
+  return Array.from(groups.entries())
+    .sort(([leftYear], [rightYear]) => rightYear - leftYear)
+    .map(([year, months]) => ({
+      year,
+      months: Array.from(months.entries())
+        .sort(([leftMonth], [rightMonth]) => rightMonth - leftMonth)
+        .map(([month, monthArticles]) => ({
+          month,
+          articles: [...monthArticles].sort(
+            (left, right) => new Date(right.publishedAt).getTime() - new Date(left.publishedAt).getTime(),
+          ),
+        })),
+    }));
+}
+
+export function getArchiveStats(): IArchiveStats {
+  return {
+    articleCount: articleSummaries.length,
+    yearCount: getArchiveGroups().length,
+    tagCount: getAllTags().length,
   };
 }
 

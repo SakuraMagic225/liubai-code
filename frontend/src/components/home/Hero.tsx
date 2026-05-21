@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom';
+
 import type { IArticleSummary } from '../../types';
 import { formatDate } from '../../utils/format';
 import { TagBadge } from '../common/TagBadge';
@@ -32,9 +34,12 @@ export function Hero({ article }: HeroProps) {
               <TagBadge key={tag} name={tag} />
             ))}
           </div>
-          <button className="mt-6 rounded-full bg-coral-400 px-5 py-2.5 text-sm font-medium text-white hover:scale-[1.03] hover:bg-coral-600 active:scale-[0.97]">
+          <Link
+            to={`/articles/${article.id}`}
+            className="mt-6 inline-flex rounded-full bg-coral-400 px-5 py-2.5 text-sm font-medium text-white hover:scale-[1.03] hover:bg-coral-600 active:scale-[0.97]"
+          >
             阅读这篇
-          </button>
+          </Link>
         </div>
       </div>
     </section>

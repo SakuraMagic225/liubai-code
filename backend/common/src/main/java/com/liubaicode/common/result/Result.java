@@ -1,5 +1,6 @@
 package com.liubaicode.common.result;
 
+import com.liubaicode.common.exception.ErrorCode;
 import java.time.Instant;
 
 public record Result<T>(
@@ -15,5 +16,17 @@ public record Result<T>(
 
     public static <T> Result<T> success() {
         return success(null);
+    }
+
+    public static <T> Result<T> failure(ErrorCode errorCode) {
+        return failure(errorCode.getCode(), errorCode.getMessage());
+    }
+
+    public static <T> Result<T> failure(ErrorCode errorCode, String message) {
+        return failure(errorCode.getCode(), message);
+    }
+
+    public static <T> Result<T> failure(Integer code, String message) {
+        return new Result<>(code, message, null, Instant.now().toEpochMilli());
     }
 }

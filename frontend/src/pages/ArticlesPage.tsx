@@ -1,25 +1,67 @@
-import { FormEvent, useMemo, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
+import { getPublicArticlePage, getPublicTags } from '../api/publicArticle';
 import { ArticleList } from '../components/article/ArticleList';
 import { Pagination } from '../components/common/Pagination';
 import { TagBadge } from '../components/common/TagBadge';
-import { articleSummaries, getAllTags, getArticlePage } from '../mocks/articles';
+import type { IArticlePage, ITag } from '../types';
 
 const PAGE_SIZE = 5;
 
 export function ArticlesPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const page = Number(searchParams.get('page') ?? '1');
+  const safePage = Number.isFinite(page) && page > 0 ? page : 1;
   const tag = searchParams.get('tag') ?? undefined;
   const keyword = searchParams.get('keyword') ?? '';
   const [keywordInput, setKeywordInput] = useState(keyword);
+  const [articlePage, setArticlePage] = useState<IArticlePage | null>(null);
+  const [tags, setTags] = useState<ITag[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  const articlePage = useMemo(
-    () => getArticlePage({ page, pageSize: PAGE_SIZE, tag, keyword }),
-    [keyword, page, tag],
+  const query = useMemo(
+    () => ({ page: safePage, pageSize: PAGE_SIZE, tag, keyword }),
+    [keyword, safePage, tag],
   );
-  const tags = getAllTags();
+
+  useEffect(() => {
+    setKeywordInput(keyword);
+  }, [keyword]);
+
+  useEffect(() => {
+    let ignore = false;
+
+    async function loadArticles() {
+      try {
+        setLoading(true);
+        const [pageData, tagData] = await Promise.all([
+          getPublicArticlePage(query),
+          getPublicTags(),
+        ]);
+        if (!ignore) {
+          setArticlePage(pageData);
+          setTags(tagData);
+          setError('');
+        }
+      } catch (err) {
+        if (!ignore) {
+          setError(err instanceof Error ? err.message : '文章列表加载失败');
+        }
+      } finally {
+        if (!ignore) {
+          setLoading(false);
+        }
+      }
+    }
+
+    void loadArticles();
+
+    return () => {
+      ignore = true;
+    };
+  }, [query]);
 
   function updateQuery(next: { page?: number; tag?: string; keyword?: string }) {
     const params = new URLSearchParams(searchParams);
@@ -59,7 +101,7 @@ export function ArticlesPage() {
             <p className="text-sm font-medium text-coral-400">Articles</p>
             <h1 className="mt-3 text-3xl font-semibold text-green-800">文章列表</h1>
             <p className="mt-4 max-w-2xl text-green-600/85">
-              按时间倒序整理所有文章，可以通过标签和关键词快速找到相关内容。
+              这里展示后台已经发布的文章，可以通过标签和关键词快速定位内容。
             </p>
           </section>
 
@@ -96,7 +138,13 @@ export function ArticlesPage() {
             </div>
           )}
 
-          {articlePage.records.length > 0 ? (
+          {loading ? (
+            <div className="rounded-lg border border-green-100/70 bg-white/80 p-8 text-green-600/80">
+              正在加载文章...
+            </div>
+          ) : error ? (
+            <div className="rounded-lg border border-coral-100 bg-coral-50/70 p-8 text-coral-600">{error}</div>
+          ) : articlePage && articlePage.records.length > 0 ? (
             <>
               <ArticleList articles={articlePage.records} title="全部文章" kicker={`${articlePage.total} 篇文章`} />
               <Pagination
@@ -107,7 +155,7 @@ export function ArticlesPage() {
             </>
           ) : (
             <div className="rounded-lg border border-green-100/70 bg-white/80 p-8 text-green-600/80">
-              没有找到匹配的文章，可以换个关键词试试。
+              没有找到匹配的文章。确认后台文章已发布，或换个筛选条件试试。
             </div>
           )}
         </div>
@@ -118,7 +166,7 @@ export function ArticlesPage() {
             <h2 className="mt-2 text-lg font-semibold text-green-800">标签筛选</h2>
             <div className="mt-5 flex flex-wrap gap-2">
               <button type="button" onClick={() => updateQuery({ tag: undefined, page: 1 })}>
-                <TagBadge name="全部" count={articleSummaries.length} />
+                <TagBadge name="全部" count={articlePage?.total ?? 0} />
               </button>
               {tags.map((item) => (
                 <button key={item.id} type="button" onClick={() => updateQuery({ tag: item.name, page: 1 })}>
