@@ -1,12 +1,45 @@
 # 留白code
 
-用代码留白，为思考赋能。
+一个面向个人技术写作的全栈博客项目。前台提供文章浏览、归档与个人展示，后台提供文章、标签、站点资料和登录鉴权管理。
 
-## 项目状态
+项目仍在持续迭代中，当前版本已经具备可部署的 MVP 能力。
 
-- `frontend/`：React 18 + TypeScript + Vite + Tailwind CSS
-- `backend/`：Spring Boot 3.x + Java 17 + Maven 多模块
-- 已具备前台文章浏览、后台文章管理、标签管理、站点设置、头像裁剪、后台登录鉴权
+## 功能概览
+
+- 前台：首页、文章列表、文章详情、归档页、关于页
+- 内容：Markdown 渲染、代码高亮、目录导航、上一篇/下一篇
+- 后台：文章管理、标签管理、站点设置、头像上传与裁剪
+- 鉴权：管理员登录、BCrypt 密码、JWT Bearer Token
+- 部署：Docker Compose、Nginx HTTPS、MySQL、上传文件持久化
+
+## 技术栈
+
+**Frontend**
+
+- React 18
+- TypeScript
+- Vite
+- Tailwind CSS
+- React Router
+
+**Backend**
+
+- Java 17
+- Spring Boot 3
+- Maven 多模块
+- MyBatis-Plus
+- MySQL
+
+## 目录结构
+
+```text
+liubai-code
+├── frontend/          # React 前台与后台管理页面
+├── backend/           # Spring Boot 多模块后端
+├── deploy/            # Docker 与 Nginx 部署配置
+├── docs/              # 项目文档
+└── docker-compose.yml # 生产部署编排
+```
 
 ## 本地开发
 
@@ -24,110 +57,51 @@ mvn -s backend/.mvn/maven-settings.xml -f backend/pom.xml package
 java -jar backend/web/target/web-0.1.0-SNAPSHOT.jar
 ```
 
-本地访问：
+默认访问：
 
 ```text
 http://localhost:5173
 ```
 
-## Docker Compose 生产部署
+## 数据库
 
-部署形态：MySQL + Spring Boot 后端 + Nginx 前端/HTTPS 反代，适合单台云服务器。
+首次使用前需要创建数据库表：
 
-### 服务器准备
+```sql
+source backend/sql/schema.sql;
+```
 
-- Docker 与 Docker Compose
-- 域名已解析到服务器
-- 已准备 HTTPS 证书文件
-- 服务器安全组开放 `80`、`443`
+管理员账号使用 `backend/sql/admin-user-example.sql` 作为模板。请自行生成 BCrypt 密码哈希，不要提交真实密码或真实哈希。
 
-### 配置环境变量
+## 部署
 
-复制环境变量示例：
+生产部署推荐使用 Docker Compose：
 
 ```bash
 cp .env.example .env
-```
-
-编辑 `.env`，至少替换：
-
-```env
-DOMAIN_NAME=你的域名
-MYSQL_ROOT_PASSWORD=强随机 root 密码
-DB_PASSWORD=强随机业务库密码
-JWT_SECRET=至少 32 位强随机字符串
-```
-
-### 放置证书
-
-将证书放到固定路径：
-
-```text
-deploy/certs/fullchain.pem
-deploy/certs/privkey.pem
-```
-
-`deploy/certs/` 下的真实证书不会进入 Git。
-
-### 启动服务
-
-```bash
 docker compose config
 docker compose build
 docker compose up -d
 ```
 
-查看状态：
+详细步骤见 [部署文档](docs/deployment.md)。
 
-```bash
-docker compose ps
-docker compose logs -f backend
-docker compose logs -f nginx
-```
+## 安全提示
 
-### 初始化管理员
+以下内容不要提交到 Git：
 
-先生成 BCrypt 密码哈希。可以在本机或服务器执行：
+- `.env`
+- `deploy/certs/` 下的真实证书
+- `uploads/`
+- 数据库数据卷
+- 任何真实密码、真实 Token、真实 JWT_SECRET
 
-```bash
-docker run --rm maven:3.9-eclipse-temurin-17 sh -lc '
-mvn -q dependency:get -Dartifact=org.springframework.security:spring-security-crypto:6.3.6 -Dtransitive=false
-mvn -q dependency:get -Dartifact=org.springframework:spring-jcl:6.1.16 -Dtransitive=false
-jshell --class-path "$HOME/.m2/repository/org/springframework/security/spring-security-crypto/6.3.6/spring-security-crypto-6.3.6.jar:$HOME/.m2/repository/org/springframework/spring-jcl/6.1.16/spring-jcl-6.1.16.jar" <<EOF
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-System.out.println(new BCryptPasswordEncoder().encode("把这里换成你的强密码"));
-/exit
-EOF
-'
-```
+生产环境请务必替换：
 
-生成后复制 `backend/sql/admin-user-example.sql` 的内容，将 `$2a$10$REPLACE_WITH_YOUR_BCRYPT_HASH` 替换为真实哈希，然后进入 MySQL 容器执行：
+- 数据库密码
+- 管理员密码
+- `JWT_SECRET`
 
-```bash
-docker compose exec -T mysql mysql -u"$DB_USERNAME" -p"$DB_PASSWORD" "$DB_NAME" < backend/sql/admin-user-example.sql
-```
+## 当前阶段
 
-不要把真实密码或真实哈希提交到 Git。
-
-### 验证
-
-```bash
-curl -I https://你的域名/
-curl https://你的域名/api/v1/articles
-curl -i https://你的域名/api/v1/admin/articles
-```
-
-预期：
-
-- 前台页面可以打开
-- 公开文章接口返回 `code: 200`
-- 未登录访问后台接口返回 `401`
-- `https://你的域名/admin/login` 可以登录后台
-
-## 安全提醒
-
-- 不要提交 `.env`
-- 不要提交 `deploy/certs/` 中的证书
-- 不要提交 `uploads/`
-- 生产环境必须替换 `JWT_SECRET`
-- MySQL 不要暴露公网端口
+项目已经完成个人博客 MVP 的核心闭环：前台浏览、后台管理、登录鉴权和 Docker 部署配置。后续可以继续补充 SEO、RSS、评论、图片管理、密码修改、CI/CD 等能力。
