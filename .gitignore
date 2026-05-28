@@ -28,6 +28,7 @@ uploads/
 .env
 deploy/certs/*
 !deploy/certs/.gitkeep
+docs/*
 
 # Logs
 .run-logs/
