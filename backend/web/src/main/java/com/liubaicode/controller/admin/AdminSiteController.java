@@ -17,6 +17,7 @@ import java.nio.file.StandardCopyOption;
 import java.util.Locale;
 import java.util.Set;
 import java.util.UUID;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -34,9 +35,14 @@ public class AdminSiteController {
     private static final Set<String> ALLOWED_CONTENT_TYPES = Set.of("image/jpeg", "image/png", "image/webp");
 
     private final ISiteSettingService siteSettingService;
+    private final String uploadDir;
 
-    public AdminSiteController(ISiteSettingService siteSettingService) {
+    public AdminSiteController(
+            ISiteSettingService siteSettingService,
+            @Value("${liubai.upload.dir:uploads}") String uploadDir
+    ) {
         this.siteSettingService = siteSettingService;
+        this.uploadDir = uploadDir;
     }
 
     @GetMapping("/profile")
@@ -55,7 +61,7 @@ public class AdminSiteController {
         validateAvatar(file);
         String extension = getExtension(file);
         String fileName = UUID.randomUUID() + "." + extension;
-        Path avatarDir = Path.of(System.getProperty("user.dir"), "uploads", "avatar").toAbsolutePath().normalize();
+        Path avatarDir = Path.of(uploadDir, "avatar").toAbsolutePath().normalize();
         Path targetPath = avatarDir.resolve(fileName).normalize();
 
         try {

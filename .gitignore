@@ -24,6 +24,11 @@ backend/.m2/
 backend/.mvn/wrapper/maven-wrapper.jar
 uploads/
 
+# Deployment
+.env
+deploy/certs/*
+!deploy/certs/.gitkeep
+
 # Logs
 .run-logs/
 *.log

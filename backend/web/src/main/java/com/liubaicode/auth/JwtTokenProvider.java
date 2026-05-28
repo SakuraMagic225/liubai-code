@@ -29,8 +29,8 @@ public class JwtTokenProvider {
 
     public JwtTokenProvider(
             ObjectMapper objectMapper,
-            @Value("${liubai.auth.jwt-secret:${JWT_SECRET:liubai-code-local-dev-secret-change-me}}") String secret,
-            @Value("${liubai.auth.jwt-expire-hours:${JWT_EXPIRE_HOURS:168}}") long expireHours
+            @Value("${liubai.auth.jwt-secret}") String secret,
+            @Value("${liubai.auth.jwt-expire-hours:168}") long expireHours
     ) {
         this.objectMapper = objectMapper;
         this.secret = secret;

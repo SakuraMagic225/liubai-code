@@ -2,6 +2,7 @@ package com.liubaicode.config;
 
 import jakarta.servlet.MultipartConfigElement;
 import java.nio.file.Path;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.servlet.MultipartConfigFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -14,9 +15,15 @@ public class WebResourceConfig implements WebMvcConfigurer {
 
     private static final DataSize MAX_AVATAR_UPLOAD_SIZE = DataSize.ofMegabytes(5);
 
+    private final String uploadDir;
+
+    public WebResourceConfig(@Value("${liubai.upload.dir:uploads}") String uploadDir) {
+        this.uploadDir = uploadDir;
+    }
+
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        Path uploadPath = Path.of(System.getProperty("user.dir"), "uploads").toAbsolutePath().normalize();
+        Path uploadPath = Path.of(uploadDir).toAbsolutePath().normalize();
         String uploadLocation = uploadPath.toUri().toString();
         if (!uploadLocation.endsWith("/")) {
             uploadLocation += "/";
