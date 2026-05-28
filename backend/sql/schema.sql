@@ -56,3 +56,18 @@ CREATE TABLE IF NOT EXISTS site_setting (
     UNIQUE KEY uk_site_setting_key_deleted (setting_key, is_deleted),
     INDEX idx_site_setting_is_deleted (is_deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Site setting table';
+
+CREATE TABLE IF NOT EXISTS admin_user (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) NOT NULL COMMENT 'Admin username',
+    password_hash VARCHAR(100) NOT NULL COMMENT 'BCrypt password hash',
+    nickname VARCHAR(50) NULL COMMENT 'Admin nickname',
+    status TINYINT NOT NULL DEFAULT 1 COMMENT '0=disabled, 1=enabled',
+    last_login_at DATETIME NULL COMMENT 'Last login time',
+    is_deleted TINYINT NOT NULL DEFAULT 0 COMMENT '0=normal, 1=deleted',
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uk_admin_user_username_deleted (username, is_deleted),
+    INDEX idx_admin_user_status (status),
+    INDEX idx_admin_user_is_deleted (is_deleted)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Admin user table';

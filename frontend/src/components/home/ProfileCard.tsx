@@ -1,7 +1,7 @@
-import type { IProfile } from '../../types';
+import type { ISiteProfile } from '../../types';
 
 interface ProfileCardProps {
-  profile: IProfile;
+  profile: ISiteProfile;
 }
 
 function ContactIcon({ label }: { label: string }) {
@@ -56,12 +56,27 @@ function ContactIcon({ label }: { label: string }) {
 }
 
 export function ProfileCard({ profile }: ProfileCardProps) {
+  const links = [
+    profile.githubUrl ? { label: 'GitHub', href: profile.githubUrl } : null,
+    profile.email ? { label: 'Email', href: profile.email.startsWith('mailto:') ? profile.email : `mailto:${profile.email}` } : null,
+    profile.rssUrl ? { label: 'RSS', href: profile.rssUrl } : null,
+  ].filter(Boolean) as Array<{ label: string; href: string }>;
+  const avatarInitial = profile.name.trim().slice(0, 1) || '留';
+
   return (
     <aside className="glass-card rounded-lg p-6">
       <div className="flex items-center gap-4">
-        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-green-100 text-lg font-semibold text-green-800">
-          留白
-        </div>
+        {profile.avatarUrl ? (
+          <img
+            src={profile.avatarUrl}
+            alt={profile.name || '头像'}
+            className="h-20 w-20 rounded-full border border-green-100 object-cover shadow-soft"
+          />
+        ) : (
+          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-green-100 text-2xl font-semibold text-green-800 shadow-soft">
+            {avatarInitial}
+          </div>
+        )}
         <div>
           <h2 className="text-lg font-semibold text-green-800">{profile.name}</h2>
           <p className="text-sm text-green-600/75">{profile.title}</p>
@@ -71,7 +86,7 @@ export function ProfileCard({ profile }: ProfileCardProps) {
       <p className="mt-5 text-sm leading-7 text-green-600/90">{profile.bio}</p>
 
       <div className="mt-6 flex flex-wrap gap-3">
-        {profile.links.map((link) => (
+        {links.map((link) => (
           <a
             key={link.label}
             href={link.href}

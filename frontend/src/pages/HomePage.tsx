@@ -1,16 +1,17 @@
 import { useEffect, useState } from 'react';
 
 import { getPublicHomeData } from '../api/publicArticle';
+import { getPublicSiteProfile } from '../api/site';
 import { ArticleList } from '../components/article/ArticleList';
 import { Hero } from '../components/home/Hero';
 import { ProfileCard } from '../components/home/ProfileCard';
 import { StatsBar } from '../components/home/StatsBar';
 import { TagCloud } from '../components/home/TagCloud';
-import { profile } from '../mocks/home';
-import type { IHomeData } from '../types';
+import type { IHomeData, ISiteProfile } from '../types';
 
 export function HomePage() {
   const [homeData, setHomeData] = useState<IHomeData | null>(null);
+  const [profile, setProfile] = useState<ISiteProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -20,9 +21,10 @@ export function HomePage() {
     async function loadHomeData() {
       try {
         setLoading(true);
-        const data = await getPublicHomeData();
+        const [data, profileData] = await Promise.all([getPublicHomeData(), getPublicSiteProfile()]);
         if (!ignore) {
           setHomeData(data);
+          setProfile(profileData);
           setError('');
         }
       } catch (err) {
@@ -65,7 +67,7 @@ export function HomePage() {
         <ArticleList articles={homeData?.latestArticles ?? []} />
 
         <div className="space-y-5 lg:sticky lg:top-28">
-          <ProfileCard profile={profile} />
+          {profile ? <ProfileCard profile={profile} /> : null}
           <StatsBar stats={homeData?.stats ?? { articleCount: 0, tagCount: 0, viewCount: 0 }} />
           <TagCloud tags={homeData?.tags ?? []} />
         </div>

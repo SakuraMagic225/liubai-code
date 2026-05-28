@@ -1,11 +1,28 @@
-import { NavLink, Outlet } from 'react-router-dom';
+import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+
+import { logoutAdmin } from '../api/auth';
+import { clearAdminSession, getStoredAdminProfile } from '../api/adminSession';
 
 const navItems = [
   { label: '文章管理', to: '/admin/articles' },
+  { label: '标签管理', to: '/admin/tags' },
+  { label: '站点设置', to: '/admin/settings' },
   { label: '返回前台', to: '/' },
 ];
 
 export function AdminLayout() {
+  const navigate = useNavigate();
+  const adminProfile = getStoredAdminProfile();
+
+  async function handleLogout() {
+    try {
+      await logoutAdmin();
+    } finally {
+      clearAdminSession();
+      navigate('/admin/login', { replace: true });
+    }
+  }
+
   return (
     <div className="min-h-screen bg-[#f6f8f3] text-green-800">
       <aside className="fixed inset-y-0 left-0 hidden w-60 border-r border-green-100 bg-white lg:block">
@@ -38,6 +55,18 @@ export function AdminLayout() {
             <div>
               <p className="text-sm text-green-600/70">Admin</p>
               <h1 className="text-lg font-semibold text-green-800">内容工作台</h1>
+            </div>
+            <div className="hidden items-center gap-3 lg:flex">
+              <span className="text-sm text-green-600/75">
+                {adminProfile?.nickname || adminProfile?.username || '管理员'}
+              </span>
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="rounded-md border border-green-100 bg-white px-3 py-2 text-sm font-medium text-green-700 hover:border-coral-100 hover:bg-coral-50 hover:text-coral-600"
+              >
+                退出登录
+              </button>
             </div>
             <nav className="flex gap-2 lg:hidden">
               {navItems.map((item) => (

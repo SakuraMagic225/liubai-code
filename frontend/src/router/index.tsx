@@ -5,6 +5,10 @@ import { MainLayout } from '../layouts/MainLayout';
 import { AboutPage } from '../pages/AboutPage';
 import { AdminArticleEditPage } from '../pages/admin/AdminArticleEditPage';
 import { AdminArticleListPage } from '../pages/admin/AdminArticleListPage';
+import { AdminLoginPage } from '../pages/admin/AdminLoginPage';
+import { AdminSettingsPage } from '../pages/admin/AdminSettingsPage';
+import { AdminTagListPage } from '../pages/admin/AdminTagListPage';
+import { AdminRouteGuard } from '../components/admin/AdminRouteGuard';
 import { ArchivePage } from '../pages/ArchivePage';
 import { ArticleDetailPage } from '../pages/ArticleDetailPage';
 import { ArticlesPage } from '../pages/ArticlesPage';
@@ -38,24 +42,41 @@ export const router: ReturnType<typeof createBrowserRouter> = createBrowserRoute
     ],
   },
   {
+    path: '/admin/login',
+    element: <AdminLoginPage />,
+  },
+  {
     path: '/admin',
-    element: <AdminLayout />,
+    element: <AdminRouteGuard />,
     children: [
       {
-        index: true,
-        element: <AdminArticleListPage />,
-      },
-      {
-        path: 'articles',
-        element: <AdminArticleListPage />,
-      },
-      {
-        path: 'articles/new',
-        element: <AdminArticleEditPage />,
-      },
-      {
-        path: 'articles/:id/edit',
-        element: <AdminArticleEditPage />,
+        element: <AdminLayout />,
+        children: [
+          {
+            index: true,
+            element: <AdminArticleListPage />,
+          },
+          {
+            path: 'articles',
+            element: <AdminArticleListPage />,
+          },
+          {
+            path: 'articles/new',
+            element: <AdminArticleEditPage />,
+          },
+          {
+            path: 'articles/:id/edit',
+            element: <AdminArticleEditPage />,
+          },
+          {
+            path: 'tags',
+            element: <AdminTagListPage />,
+          },
+          {
+            path: 'settings',
+            element: <AdminSettingsPage />,
+          },
+        ],
       },
     ],
   },

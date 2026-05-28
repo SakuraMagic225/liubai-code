@@ -71,7 +71,18 @@ export interface IProfile {
   name: string;
   title: string;
   bio: string;
+  avatarUrl?: string;
   links: IProfileLink[];
+}
+
+export interface ISiteProfile {
+  name: string;
+  title: string;
+  bio: string;
+  avatarUrl: string;
+  githubUrl: string;
+  email: string;
+  rssUrl: string;
 }
 
 export interface IHomeStats {
@@ -140,4 +151,39 @@ export interface IAdminArticlePayload {
   coverImage?: string;
   status: number;
   tagIds: number[];
+}
+
+export interface IAdminTag {
+  id: number;
+  name: string;
+  color?: string;
+  articleCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface IAdminTagPayload {
+  name: string;
+  color?: string;
+}
+
+export interface IAvatarUploadResult {
+  avatarUrl: string;
+}
+
+export interface IAdminProfile {
+  id: number;
+  username: string;
+  nickname: string;
+}
+
+export interface IAdminLoginPayload {
+  username: string;
+  password: string;
+}
+
+export interface IAdminLoginResult {
+  token: string;
+  expiresAt: number;
+  admin: IAdminProfile;
 }

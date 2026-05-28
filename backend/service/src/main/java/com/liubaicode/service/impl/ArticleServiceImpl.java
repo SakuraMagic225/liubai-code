@@ -480,7 +480,7 @@ public class ArticleServiceImpl implements IArticleService {
                 .filter(tagId -> !existingTagIds.contains(tagId))
                 .toList();
         if (!missingTagIds.isEmpty()) {
-            throw new BizException(ErrorCode.BAD_REQUEST, "Tag does not exist: " + missingTagIds);
+            throw new BizException(ErrorCode.BAD_REQUEST, "标签不存在：" + missingTagIds);
         }
     }
 

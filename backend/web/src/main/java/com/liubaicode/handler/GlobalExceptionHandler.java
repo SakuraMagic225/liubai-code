@@ -8,6 +8,8 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.validation.BindException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.multipart.MultipartException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -49,6 +51,16 @@ public class GlobalExceptionHandler {
                 .map(violation -> violation.getPropertyPath() + ": " + violation.getMessage())
                 .collect(Collectors.joining("; "));
         return Result.failure(ErrorCode.VALIDATION_ERROR, message);
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public Result<Void> handleMaxUploadSizeExceededException(MaxUploadSizeExceededException exception) {
+        return Result.failure(ErrorCode.BAD_REQUEST, "上传文件过大");
+    }
+
+    @ExceptionHandler(MultipartException.class)
+    public Result<Void> handleMultipartException(MultipartException exception) {
+        return Result.failure(ErrorCode.BAD_REQUEST, "文件上传失败");
     }
 
     @ExceptionHandler(Exception.class)

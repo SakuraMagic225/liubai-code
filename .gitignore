@@ -22,7 +22,9 @@ frontend/vite.config.d.ts
 backend/**/target/
 backend/.m2/
 backend/.mvn/wrapper/maven-wrapper.jar
+uploads/
 
 # Logs
+.run-logs/
 *.log
 *.tmp

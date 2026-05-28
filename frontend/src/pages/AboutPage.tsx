@@ -1,6 +1,19 @@
 import { Link } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
 
-import { profile, tags } from '../mocks/home';
+import { getPublicTags } from '../api/publicArticle';
+import { getPublicSiteProfile } from '../api/site';
+import type { ISiteProfile, ITag } from '../types';
+
+const defaultProfile: ISiteProfile = {
+  name: '留白',
+  title: 'Java 后端开发 / AI Agent 实践者',
+  bio: '记录后端工程、系统设计与 AI 协作编码。偏爱清晰边界、稳定交付和能留下思考空间的代码。',
+  avatarUrl: '',
+  githubUrl: 'https://github.com/',
+  email: 'hello@liubaicode.dev',
+  rssUrl: '/rss.xml',
+};
 
 const skillGroups = [
   {
@@ -65,6 +78,46 @@ const contactIcons: Record<string, JSX.Element> = {
 };
 
 export function AboutPage() {
+  const [profile, setProfile] = useState<ISiteProfile>(defaultProfile);
+  const [tags, setTags] = useState<ITag[]>([]);
+
+  const profileLinks = useMemo(
+    () =>
+      [
+        profile.githubUrl ? { label: 'GitHub', href: profile.githubUrl } : null,
+        profile.email
+          ? { label: 'Email', href: profile.email.startsWith('mailto:') ? profile.email : `mailto:${profile.email}` }
+          : null,
+        profile.rssUrl ? { label: 'RSS', href: profile.rssUrl } : null,
+      ].filter(Boolean) as Array<{ label: string; href: string }>,
+    [profile.email, profile.githubUrl, profile.rssUrl],
+  );
+  const avatarInitial = profile.name.trim().slice(0, 1) || '留';
+
+  useEffect(() => {
+    let ignore = false;
+
+    async function loadAboutData() {
+      try {
+        const [profileData, tagData] = await Promise.all([getPublicSiteProfile(), getPublicTags()]);
+        if (!ignore) {
+          setProfile(profileData);
+          setTags(tagData);
+        }
+      } catch {
+        if (!ignore) {
+          setTags([]);
+        }
+      }
+    }
+
+    void loadAboutData();
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
   return (
     <div className="mx-auto max-w-6xl px-5 py-10 sm:px-6 lg:px-8">
       <section className="rounded-lg border border-green-100/70 bg-green-50/70 p-8 shadow-soft">
@@ -80,16 +133,24 @@ export function AboutPage() {
 
           <div className="rounded-lg border border-white/80 bg-white/70 p-5">
             <div className="flex items-center gap-4">
-              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-coral-50 text-xl font-semibold text-coral-600">
-                留
-              </div>
+              {profile.avatarUrl ? (
+                <img
+                  src={profile.avatarUrl}
+                  alt={profile.name || '头像'}
+                  className="h-20 w-20 rounded-full border border-coral-100 object-cover shadow-soft"
+                />
+              ) : (
+                <div className="flex h-20 w-20 items-center justify-center rounded-full bg-coral-50 text-2xl font-semibold text-coral-600 shadow-soft">
+                  {avatarInitial}
+                </div>
+              )}
               <div>
                 <h2 className="text-lg font-semibold text-green-800">{profile.name}</h2>
                 <p className="mt-1 text-sm text-green-600/75">{profile.title}</p>
               </div>
             </div>
             <div className="mt-5 flex flex-wrap gap-2">
-              {profile.links.map((link) => (
+              {profileLinks.map((link) => (
                 <a
                   key={link.label}
                   href={link.href}

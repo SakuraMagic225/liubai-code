@@ -2,8 +2,9 @@ import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 
 import { createAdminArticle, getAdminArticleDetail, updateAdminArticle } from '../../api/adminArticle';
+import { getAdminTags } from '../../api/adminTag';
 import { MarkdownRenderer } from '../../components/article/MarkdownRenderer';
-import type { IAdminArticlePayload } from '../../types';
+import type { IAdminArticlePayload, IAdminTag } from '../../types';
 
 interface ArticleFormState {
   title: string;
@@ -12,7 +13,7 @@ interface ArticleFormState {
   contentHtml: string;
   coverImage: string;
   status: string;
-  tagIdsText: string;
+  tagIds: number[];
 }
 
 const emptyForm: ArticleFormState = {
@@ -22,19 +23,8 @@ const emptyForm: ArticleFormState = {
   contentHtml: '',
   coverImage: '',
   status: '0',
-  tagIdsText: '',
+  tagIds: [],
 };
-
-function parseTagIds(value: string) {
-  if (!value.trim()) {
-    return [];
-  }
-
-  return value
-    .split(',')
-    .map((item) => Number(item.trim()))
-    .filter((item) => Number.isInteger(item) && item > 0);
-}
 
 function buildPayload(form: ArticleFormState): IAdminArticlePayload {
   return {
@@ -44,7 +34,7 @@ function buildPayload(form: ArticleFormState): IAdminArticlePayload {
     contentHtml: form.contentHtml,
     coverImage: form.coverImage.trim(),
     status: Number(form.status),
-    tagIds: parseTagIds(form.tagIdsText),
+    tagIds: form.tagIds,
   };
 }
 
@@ -54,7 +44,8 @@ export function AdminArticleEditPage() {
   const articleId = id ? Number(id) : undefined;
   const isEdit = Number.isFinite(articleId);
   const [form, setForm] = useState<ArticleFormState>(emptyForm);
-  const [loading, setLoading] = useState(Boolean(isEdit));
+  const [tags, setTags] = useState<IAdminTag[]>([]);
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
@@ -65,20 +56,26 @@ export function AdminArticleEditPage() {
   );
 
   useEffect(() => {
-    if (!isEdit || !articleId) {
-      return;
-    }
-
     const currentArticleId = articleId;
     let ignore = false;
 
-    async function loadArticle() {
+    async function loadPageData() {
       setLoading(true);
       setError('');
 
       try {
+        const tagData = await getAdminTags();
+
+        if (!isEdit || !currentArticleId) {
+          if (!ignore) {
+            setTags(tagData);
+          }
+          return;
+        }
+
         const detail = await getAdminArticleDetail(currentArticleId);
         if (!ignore) {
+          setTags(tagData);
           setForm({
             title: detail.title ?? '',
             summary: detail.summary ?? '',
@@ -86,12 +83,12 @@ export function AdminArticleEditPage() {
             contentHtml: detail.contentHtml ?? '',
             coverImage: detail.coverImage ?? '',
             status: String(detail.status),
-            tagIdsText: detail.tagIds?.join(',') ?? '',
+            tagIds: detail.tagIds ?? [],
           });
         }
       } catch (currentError) {
         if (!ignore) {
-          setError(currentError instanceof Error ? currentError.message : '文章详情加载失败');
+          setError(currentError instanceof Error ? currentError.message : '页面数据加载失败');
         }
       } finally {
         if (!ignore) {
@@ -100,7 +97,7 @@ export function AdminArticleEditPage() {
       }
     }
 
-    loadArticle();
+    loadPageData();
 
     return () => {
       ignore = true;
@@ -109,6 +106,15 @@ export function AdminArticleEditPage() {
 
   function updateField(field: keyof ArticleFormState, value: string) {
     setForm((current) => ({ ...current, [field]: value }));
+  }
+
+  function toggleTag(tagId: number) {
+    setForm((current) => ({
+      ...current,
+      tagIds: current.tagIds.includes(tagId)
+        ? current.tagIds.filter((currentTagId) => currentTagId !== tagId)
+        : [...current.tagIds, tagId],
+    }));
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -221,34 +227,58 @@ export function AdminArticleEditPage() {
             />
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <label className="text-sm font-medium text-green-800" htmlFor="article-status">
-                状态
-              </label>
-              <select
-                id="article-status"
-                value={form.status}
-                onChange={(event) => updateField('status', event.target.value)}
-                className="mt-2 w-full rounded-md border border-green-100 px-3 py-2 text-sm text-green-800 outline-none focus:border-coral-400"
-              >
-                <option value="0">草稿</option>
-                <option value="1">已发布</option>
-              </select>
-            </div>
+          <div>
+            <label className="text-sm font-medium text-green-800" htmlFor="article-status">
+              状态
+            </label>
+            <select
+              id="article-status"
+              value={form.status}
+              onChange={(event) => updateField('status', event.target.value)}
+              className="mt-2 w-full rounded-md border border-green-100 px-3 py-2 text-sm text-green-800 outline-none focus:border-coral-400"
+            >
+              <option value="0">草稿</option>
+              <option value="1">已发布</option>
+            </select>
+          </div>
 
-            <div>
-              <label className="text-sm font-medium text-green-800" htmlFor="article-tags">
-                标签 ID
-              </label>
-              <input
-                id="article-tags"
-                value={form.tagIdsText}
-                onChange={(event) => updateField('tagIdsText', event.target.value)}
-                className="mt-2 w-full rounded-md border border-green-100 px-3 py-2 text-sm text-green-800 outline-none focus:border-coral-400"
-                placeholder="例如：1,2"
-              />
+          <div>
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-sm font-medium text-green-800">标签</span>
+              <Link to="/admin/tags" className="text-xs font-medium text-coral-500 hover:text-coral-600">
+                管理标签
+              </Link>
             </div>
+            {tags.length > 0 ? (
+              <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                {tags.map((tag) => (
+                  <label
+                    key={tag.id}
+                    className={`flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2 text-sm transition ${
+                      form.tagIds.includes(tag.id)
+                        ? 'border-coral-200 bg-coral-50 text-coral-700'
+                        : 'border-green-100 bg-white text-green-700 hover:border-coral-100 hover:bg-coral-50'
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={form.tagIds.includes(tag.id)}
+                      onChange={() => toggleTag(tag.id)}
+                      className="h-4 w-4 rounded border-green-100 text-coral-400 focus:ring-coral-300"
+                    />
+                    <span
+                      className="h-3 w-3 rounded-full border border-green-100"
+                      style={{ backgroundColor: tag.color || '#EAF3DE' }}
+                    />
+                    <span className="truncate">{tag.name}</span>
+                  </label>
+                ))}
+              </div>
+            ) : (
+              <div className="mt-2 rounded-md border border-dashed border-green-100 bg-green-50/50 px-3 py-4 text-sm text-green-600/75">
+                暂无可选标签，可以先去标签管理页创建。
+              </div>
+            )}
           </div>
 
           <div>
