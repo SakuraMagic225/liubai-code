@@ -2,7 +2,7 @@ FROM maven:3.9-eclipse-temurin-17 AS builder
 
 WORKDIR /workspace
 COPY backend ./backend
-RUN mvn -s backend/.mvn/maven-settings.xml -f backend/pom.xml package -DskipTests
+RUN mvn -f backend/pom.xml package -DskipTests
 
 FROM eclipse-temurin:17-jre
 
